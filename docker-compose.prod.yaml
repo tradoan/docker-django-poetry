@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  django-app:
+    build:
+      context: .
+      target: prod
+    ports:
+      - '8000:8000'
+    # https://docs.gunicorn.org/en/stable/design.html#how-many-workers
+    command: >
+      sh -c "python manage.py collectstatic --no-input
+      && gunicorn store.wsgi:application --bind 0.0.0.0:8000 --workers $((2*${NUM_CORES}+1))"
+    environment:
+      - POSTGRES_HOST
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - DJANGO_SECRET
+      - DJANGO_SUPERUSER_PASSWORD
+      - DJANGO_SUPERUSER_EMAIL
+      - DJANGO_SUPERUSER_USERNAME
+      - DJANGO_SETTINGS_MODULE=store.settings.prod
+    depends_on:
+      db:
+        condition: service_healthy
+    # links:
+    #   - db
+
+  db:
+    image: postgres:15
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data/database:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+# volumes:
+#   database:
