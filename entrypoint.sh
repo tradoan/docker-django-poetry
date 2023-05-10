@@ -1,21 +1,20 @@
 #!/bin/sh
-set -e
+https://stackoverflow.com/questions/2870992/automatic-exit-from-bash-shell-script-on-error
+set -euxv
 
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createcachetable
 
-printenv
-echo "${DJANGO_SUPERUSER_USERNAME}"
-
 if [ "$DJANGO_SUPERUSER_USERNAME" ]
 then
-    echo "New supseruser will be created"
     python manage.py createsuperuser \
         --noinput \
         --username $DJANGO_SUPERUSER_USERNAME \
-        --email $DJANGO_SUPERUSER_EMAIL
-    echo "New supseruser was created"
+        --email $DJANGO_SUPERUSER_EMAIL \
+        # If the given user exists, continue running the script
+        # https://stackoverflow.com/questions/17830326/ignoring-specific-errors-in-a-shell-script
+        || true
 fi
 
 exec "$@"
