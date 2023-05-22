@@ -49,16 +49,9 @@ RUN apt-get update \
 ENV POETRY_VERSION=1.2.0
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-RUN printenv
-RUN whoami
-
-RUN poetry --version
 WORKDIR "${POETRY_HOME}"
 COPY ./pyproject.toml ./poetry.lock .
 RUN poetry install --no-dev --no-root
-RUN poetry list
-
-RUN ls -al  $POETRY_HOME
 
 from python-base as dev
 
